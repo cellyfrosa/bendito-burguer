@@ -528,6 +528,28 @@ body.has-cart .main{
   padding-bottom: calc(var(--main-bottom-space) + env(safe-area-inset-bottom));
 }
 
+.site-footer{
+  padding: var(--space-8) 0 var(--space-7);
+  border-top: 1px solid rgba(242,178,51,.14);
+  background:
+    linear-gradient(180deg, rgba(12,10,8,.62), rgba(7,6,4,.50));
+}
+.site-footer .wrap{
+  display:flex;
+  justify-content:center;
+}
+.site-footer p{
+  margin:0;
+  text-align:center;
+  color: rgba(215,203,184,.88);
+  font-size: 12px;
+  letter-spacing: .45px;
+  line-height: 1.5;
+}
+body.has-cart .site-footer{
+  padding-bottom: calc(var(--space-10) + env(safe-area-inset-bottom));
+}
+
 .h2{
   margin:var(--space-4) 0 var(--space-2);
   font-family:"Bebas Neue",sans-serif;
@@ -2306,6 +2328,13 @@ dialog::backdrop{ background: rgba(0,0,0,.62); }
   }
   .hero-ultimate__address{
     padding: var(--space-2) var(--space-3);
+  }
+  .site-footer{
+    padding: var(--space-6) 0 var(--space-5);
+  }
+  .site-footer p{
+    font-size: 11px;
+    letter-spacing: .35px;
   }
   .cartbar{
     bottom: calc(8px + env(safe-area-inset-bottom));
