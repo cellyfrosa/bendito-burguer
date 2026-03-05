@@ -1,0 +1,248 @@
+<!-- =========================
+     index.html (REVISADO + COMPLETO)
+     - Header clean (sem topbar/menu/icons/badge)
+     - Drawer com inert (acessibilidade)
+     - Modal endereço + modal personalizar (integrado ao carrinho)
+     - IDs compatíveis com o script.js abaixo
+     ========================= -->
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Bendito Burguer — Delivery</title>
+  <meta name="description" content="Peça online no Bendito Burguer. Entrega e retirada.">
+
+  <link rel="icon" href="./logo-bendito.png" type="image/png">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="./styles.css?v=19">
+</head>
+
+<body>
+  <a class="sr-only" href="#cardapio">Pular para o cardápio</a>
+
+  <div class="grain" aria-hidden="true"></div>
+  <div class="dust" aria-hidden="true"></div>
+
+  <!-- HEADER/HERO -->
+  <section class="hero-ultimate" aria-label="Header do Bendito Burguer">
+    <div class="wrap hero-ultimate__outer">
+      <div class="hero-ultimate__card">
+
+        <div class="hero-ultimate__grid">
+          <div class="hero-ultimate__left">
+            <div class="hero-ultimate__kicker">BENDITO BURGUER</div>
+
+            <h1 class="hero-ultimate__title">
+              O BURGUER<br>
+              <span>QUE VOCÊ MERECE.</span>
+            </h1>
+
+            <p class="hero-ultimate__desc">
+              Burgers artesanais, ingredientes selecionados e combinações irresistíveis.
+              O pedido perfeito para matar a fome.
+            </p>
+
+            <div class="hero-ultimate__cta">
+              <a class="hero-ultimate__btn" href="#cardapio">Pedir agora</a>
+              <a class="hero-ultimate__btn ghost" href="#cardapio">Ver cardápio</a>
+            </div>
+
+            <div class="hero-ultimate__seals" aria-label="Destaques do Bendito Burguer">
+              <span class="seal" tabindex="0">🔥 Artesanal</span>
+              <span class="seal" tabindex="0">🧀 Ingredientes selecionados</span>
+              <span class="seal" tabindex="0">⏱️ Entrega rápida</span>
+            </div>
+          </div>
+
+          <div class="hero-ultimate__right" aria-hidden="true">
+            <div class="hero-ultimate__halo"></div>
+            <div class="hero-ultimate__sparks"></div>
+            <img class="hero-ultimate__heroimg" src="./logo-bendito.png" alt="">
+          </div>
+        </div>
+
+        <div class="hero-ultimate__bottom">
+          <div class="hero-ultimate__status">
+            <span class="dot" id="statusDot" aria-hidden="true"></span>
+            <span id="statusText">—</span>
+          </div>
+
+          <div class="hero-ultimate__toggle" aria-label="Modo do pedido">
+            <span class="pill active" aria-current="true">Entrega</span>
+          </div>
+
+          <button class="hero-ultimate__address" id="openAddress" type="button" aria-label="Informar endereço">
+            <div class="hero-ultimate__addrtext">
+              <div id="addrLine">Entregar em: selecione</div>
+              <small id="addrMeta">Taxa e tempo aparecem depois</small>
+            </div>
+            <span class="chev" aria-hidden="true">›</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN -->
+  <main class="wrap main" role="main">
+    <section class="hero" aria-label="Busca e filtros">
+      <div class="kicker">🔥 Pedido rápido, fome resolvida</div>
+      <h2 class="h2">Faça seu pedido</h2>
+      <p class="lead">Busque, filtre e adicione ao carrinho.</p>
+
+      <div class="tools" role="search">
+        <div class="search">
+          <span aria-hidden="true">🔎</span>
+          <label for="q" class="sr-only">Buscar no cardápio</label>
+          <input id="q" name="q" type="search" placeholder="Buscar no cardápio…" autocomplete="off" inputmode="search">
+        </div>
+
+        <label for="cat" class="sr-only">Filtrar por categoria</label>
+        <select class="select" id="cat" name="cat" aria-label="Filtrar por categoria">
+          <option value="todos">Categorias</option>
+          <option value="trad">Burgers Tradicionais</option>
+          <option value="esp">Burgers Especiais</option>
+        </select>
+      </div>
+
+      <nav class="cats" aria-label="Categorias">
+        <button class="cat active" data-cat="todos" type="button">Todos</button>
+        <button class="cat" data-cat="trad" type="button">Tradicionais</button>
+        <button class="cat" data-cat="esp" type="button">Especiais</button>
+      </nav>
+    </section>
+
+    <section class="section" id="cardapio" aria-label="Cardápio">
+      <h2>Cardápio</h2>
+      <div class="grid" id="grid" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <!-- Cartbar -->
+  <div class="cartbar" role="contentinfo" aria-label="Resumo do carrinho">
+    <div class="wrap cartwrap">
+      <div class="totals" aria-live="polite">
+        <div class="totals__item">
+          <small>Subtotal</small>
+          <b id="subtotal">R$ 0,00</b>
+        </div>
+        <div class="totals__item">
+          <small>Taxa</small>
+          <b id="fee">R$ 0,00</b>
+        </div>
+        <div class="totals__item totals__item--total">
+          <small>Total</small>
+          <span class="big" id="total">R$ 0,00</span>
+        </div>
+      </div>
+
+      <div class="checkout">
+        <span class="count" id="count" aria-label="Quantidade de itens no carrinho">0</span>
+        <button class="btn cartbar__btn" id="checkoutBtn" type="button" aria-label="Ver carrinho" aria-controls="cartDrawer">
+          <span>Ver carrinho</span>
+          <span class="cartbar__btn-arrow" aria-hidden="true">›</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="drawerOverlay" class="drawer-overlay" hidden></div>
+
+  <!-- Drawer Carrinho -->
+  <aside id="cartDrawer" class="drawer" aria-label="Carrinho" aria-hidden="true" inert>
+    <div class="drawer-content" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" tabindex="-1">
+      <div class="drawer-header">
+        <div class="drawer-header__title">
+          <small class="drawer-header__eyebrow">Bendito Burguer</small>
+          <h3 id="drawerTitle">Seu Pedido</h3>
+        </div>
+        <button id="closeDrawer" class="iconbtn" type="button" aria-label="Fechar carrinho">✕</button>
+      </div>
+
+      <div id="drawerItems" class="drawer-items" aria-live="polite"></div>
+
+      <div class="drawer-footer">
+        <div class="drawer-footer__line">
+          <small>Subtotal</small>
+          <span id="drawerSubtotal">R$ 0,00</span>
+        </div>
+        <div class="drawer-footer__line">
+          <small>Taxa</small>
+          <span id="drawerFee">R$ 0,00</span>
+        </div>
+        <div class="drawer-total drawer-footer__line">
+          <small>Total</small>
+          <strong id="drawerTotal">R$ 0,00</strong>
+        </div>
+        <button class="btn drawer-checkout-btn" id="drawerCheckout" type="button">Fechar pedido</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Modal endereço -->
+  <dialog id="addrModal" aria-label="Endereço de entrega">
+    <form class="modal" id="addrForm" method="dialog">
+      <h4>Informe seu endereço</h4>
+      <p>Entregas apenas para <b>Cerquilho - SP</b> (taxa R$ 6,00).</p>
+
+      <div class="field">
+        <label for="street">Rua / Número</label>
+        <input id="street" name="street" type="text" autocomplete="street-address" placeholder="Ex.: Rua X, 123">
+      </div>
+
+      <div class="field">
+        <label for="district">Bairro</label>
+        <input id="district" name="district" type="text" autocomplete="address-level3" placeholder="Ex.: Centro">
+      </div>
+
+      <div class="field">
+        <label for="city">Cidade</label>
+        <input id="city" name="city" type="text" autocomplete="address-level2" placeholder="Ex.: Cerquilho">
+      </div>
+
+      <div class="modalrow">
+<button class="cart-options-btn" type="button">
+  Opções <span>›</span>
+</button>
+        <button class="btn" id="saveAddr" type="submit">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Modal personalizar (usado ao clicar "Personalizar" no carrinho) -->
+  <dialog id="customModal" aria-label="Personalizar lanche">
+    <form class="modal" id="customForm" method="dialog">
+      <h4 id="customTitle">Personalizar</h4>
+      <p id="customDesc">Selecione o que remover e/ou adicionar.</p>
+
+      <div class="custom-grid">
+        <div class="custom-col">
+          <h5>Remover</h5>
+          <div id="customRemove" class="custom-list"></div>
+        </div>
+
+        <div class="custom-col">
+          <h5>Adicionar (extras)</h5>
+          <div id="customExtras" class="custom-list"></div>
+        </div>
+      </div>
+
+      <div class="modalrow">
+        <button class="btn ghost" id="customCancel" type="button">Cancelar</button>
+        <button class="btn" id="customSave" type="submit">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+<script src="./script.js?v=12" defer></script>
+</body>
+</html>
