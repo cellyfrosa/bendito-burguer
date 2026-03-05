@@ -9,6 +9,7 @@
 const WHATSAPP_NUMBER = "5515996273162";
 const OPEN_HOUR = 19;
 const CLOSE_HOUR = 23;
+const BURGER_ICON = "\uD83C\uDF54";
 
 const STORAGE_KEY = "bendito_state_inline_v1";
 
@@ -16,7 +17,7 @@ const STORAGE_KEY = "bendito_state_inline_v1";
 const DELIVERY_CITY = "cerquilho";
 const DELIVERY_STATE = "sp";
 const DELIVERY_FEE = 6;
-const DELIVERY_ETA = "30–50min";
+const DELIVERY_ETA = "30-50 min";
 
 // ===== EXTRAS GLOBAIS =====
 const GLOBAL_EXTRAS = [
@@ -37,7 +38,7 @@ const PRODUCTS = [
     cat: "trad",
     price: 28.90,
     img: "./img/classico.png",
-    desc: "Pão brioche, hambúrguer 120g, queijo mussarela, alface, tomate e molho especial.",
+    desc: "Pão brioche, hambúrguer 120g, queijo muçarela, alface, tomate e molho especial.",
     tags: ["120g", "brioche", "molho"],
     removeOptions: ["Alface", "Tomate", "Queijo", "Molho"],
   },
@@ -101,11 +102,67 @@ const PRODUCTS = [
     tags: ["frango"],
     removeOptions: ["Queijo", "Alface", "Molho"],
   },
+  {
+    id: "coca350",
+    name: "Coca-Cola 350ml",
+    cat: "bebidas",
+    price: 6.00,
+    img: "./img/bebidas/coca-cola-350.png",
+    desc: "Refrigerante em lata 350 ml, bem gelado.",
+    tags: ["bebida", "lata", "350 ml"],
+    customizable: false,
+    removeOptions: [],
+  },
+  {
+    id: "cocazero350",
+    name: "Coca-Cola Zero 350ml",
+    cat: "bebidas",
+    price: 6.00,
+    img: "./img/bebidas/coca-cola-zero-350.png",
+    desc: "Refrigerante zero açúcar em lata 350 ml.",
+    tags: ["bebida", "zero", "350 ml"],
+    customizable: false,
+    removeOptions: [],
+  },
+  {
+    id: "fanta350",
+    name: "Fanta Laranja 350ml",
+    cat: "bebidas",
+    price: 6.00,
+    img: "./img/bebidas/fanta-laranja-350.png",
+    desc: "Refrigerante sabor laranja em lata 350 ml.",
+    tags: ["bebida", "laranja", "350 ml"],
+    customizable: false,
+    removeOptions: [],
+  },
+  {
+    id: "sprite350",
+    name: "Sprite 350ml",
+    cat: "bebidas",
+    price: 6.00,
+    img: "./img/bebidas/sprite-350.png",
+    desc: "Refrigerante sabor limão em lata 350 ml.",
+    tags: ["bebida", "limão", "350 ml"],
+    customizable: false,
+    removeOptions: [],
+  },
+  {
+    id: "guarana350",
+    name: "Guaraná Antarctica 350ml",
+    cat: "bebidas",
+    price: 6.00,
+    img: "./img/bebidas/guarana-antartica-350.png",
+    desc: "Refrigerante de guaraná em lata 350 ml.",
+    tags: ["bebida", "guaraná", "350 ml"],
+    customizable: false,
+    removeOptions: [],
+  },
 ];
 
 // ===== STATE =====
 let address = null; // {street, district, city}
 let cart = [];      // { uid, productId, qty, custom:{ remove:[], extras:{} }, ui:{ open:boolean } }
+let orderNote = "";
 let lastFocus = null;
 
 // ===== HELPERS =====
@@ -119,6 +176,11 @@ function stripAccents(s){
 }
 function norm(s){
   return stripAccents(String(s || "").trim().toLowerCase());
+}
+function truncateText(s, max = 36){
+  const txt = String(s || "").trim();
+  if(txt.length <= max) return txt;
+  return `${txt.slice(0, Math.max(0, max - 1)).trimEnd()}…`;
 }
 function isOpenNow(){
   const h = new Date().getHours();
@@ -145,6 +207,9 @@ function getProduct(id){
 function getExtraById(id){
   return GLOBAL_EXTRAS.find(x => x.id === id) || null;
 }
+function canCustomizeProduct(product){
+  return !!product && product.customizable !== false;
+}
 function lineExtrasTotal(line){
   const extras = line?.custom?.extras || {};
   let t = 0;
@@ -157,6 +222,7 @@ function lineExtrasTotal(line){
 function lineUnitPrice(line){
   const p = getProduct(line.productId);
   if(!p) return 0;
+  if(!canCustomizeProduct(p)) return p.price;
   return p.price + lineExtrasTotal(line);
 }
 function cartCount(){
@@ -166,6 +232,9 @@ function cartSubtotal(){
   return cart.reduce((sum, line) => sum + lineUnitPrice(line) * (Number(line.qty) || 0), 0);
 }
 function summarizeCustomization(line){
+  const p = getProduct(line?.productId);
+  if(!canCustomizeProduct(p)) return "";
+
   const remove = line?.custom?.remove || [];
   const extras = line?.custom?.extras || {};
   const parts = [];
@@ -193,7 +262,7 @@ function saveState(){
       qty: l.qty,
       custom: l.custom || { remove: [], extras: {} }
     }));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ address, cart: safeCart }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ address, cart: safeCart, note: orderNote }));
   }catch{}
 }
 function loadState(){
@@ -203,6 +272,7 @@ function loadState(){
     const data = JSON.parse(raw);
 
     address = data.address || null;
+    orderNote = typeof data.note === "string" ? data.note.slice(0, 280) : "";
 
     const incoming = Array.isArray(data.cart) ? data.cart : [];
     cart = incoming
@@ -217,6 +287,8 @@ function loadState(){
         ui: { open: false }
       }))
       .filter(l => !!getProduct(l.productId));
+
+    if(orderNoteInput) orderNoteInput.value = orderNote;
   }catch{}
 }
 
@@ -234,15 +306,25 @@ const countEl = $("count");
 const q = $("q");
 const cat = $("cat");
 const grid = $("grid");
+const ctaOrderNow = $("ctaOrderNow");
+const ctaMenu = $("ctaMenu");
 
 const addrModal = $("addrModal");
 const addrForm = $("addrForm");
 const street = $("street");
 const district = $("district");
 const city = $("city");
-const cancelAddrBtn = $("cancelAddr");
+const cancelAddrBtn = $("cancelAddr") || addrModal?.querySelector?.(".cart-options-btn") || null;
+
+if(cancelAddrBtn && cancelAddrBtn.classList.contains("cart-options-btn")){
+  cancelAddrBtn.type = "button";
+  cancelAddrBtn.classList.remove("cart-options-btn");
+  cancelAddrBtn.classList.add("btn", "ghost");
+  cancelAddrBtn.textContent = "Cancelar";
+}
 
 const checkoutBtn = $("checkoutBtn");
+const cartbar = document.querySelector(".cartbar");
 const cartDrawer = $("cartDrawer");
 const drawerOverlay = $("drawerOverlay");
 const closeDrawer = $("closeDrawer");
@@ -251,7 +333,18 @@ const drawerSubtotalEl = $("drawerSubtotal");
 const drawerFeeEl = $("drawerFee");
 const drawerTotalEl = $("drawerTotal");
 const drawerCheckout = $("drawerCheckout");
+const orderNoteInput = $("orderNote");
 const drawerContent = cartDrawer?.querySelector?.(".drawer-content") || null;
+
+function goToMenuAndFocusSearch(){
+  const menu = $("cardapio");
+  menu?.scrollIntoView({ behavior: "smooth", block: "start" });
+  setTimeout(() => q?.focus?.(), 420);
+}
+function scrollToMenu(){
+  const menu = $("cardapio");
+  menu?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 
 // ===== RENDER =====
 function renderStatus(){
@@ -271,13 +364,18 @@ function renderAddress(){
   const { fee, eta, blocked } = calcFeeAndEta();
 
   if(!address){
-    addrLine.textContent = "Entregar em: selecione";
+    addrLine.textContent = "Informar endereço de entrega:";
     addrMeta.textContent = "Entrega disponível somente em Cerquilho/SP";
     return;
   }
 
-  addrLine.textContent = `${address.street} — ${address.district} (${address.city})`;
-  addrMeta.textContent = blocked ? "Entrega disponível somente em Cerquilho/SP" : `Taxa ${money(fee)} • ${eta}`;
+  const street = truncateText(address.street, 42);
+  const location = truncateText([address.district, address.city].filter(Boolean).join(" • "), 34);
+
+  addrLine.textContent = street || "Endereço informado";
+  addrMeta.textContent = blocked
+    ? "Entrega disponível somente em Cerquilho/SP"
+    : `${location} • Taxa ${money(fee)} • ${eta}`;
 }
 
 function renderCartTotals(){
@@ -292,37 +390,48 @@ function renderCartTotals(){
   feeEl.textContent = money(f);
   totalEl.textContent = money(sub + f);
   countEl.textContent = String(items);
+
+  if(cartbar){
+    const hide = items === 0;
+    cartbar.classList.toggle("is-hidden", hide);
+    cartbar.setAttribute("aria-hidden", hide ? "true" : "false");
+  }
+  document.body.classList.toggle("has-cart", items > 0);
 }
 
 function renderProducts(){
   if(!grid) return;
 
   const query = norm(q?.value || "");
-  const c = cat?.value || "todos";
-
-  const list = PRODUCTS.filter(p => {
-    const okCat = (c === "todos") || (p.cat === c);
-    const okQuery = !query || norm(p.name).includes(query) || norm(p.desc).includes(query);
-    return okCat && okQuery;
-  });
+  const c = cat?.value || "";
+  const validCats = new Set(["trad","esp","bebidas"]);
+  const selectedCat = validCats.has(c) ? c : "";
 
   grid.innerHTML = "";
-  list.forEach(p => {
+
+  const byQuery = PRODUCTS.filter(p => {
+    return !query || norm(p.name).includes(query) || norm(p.desc).includes(query);
+  });
+
+  function appendCard(p, extraClass = ""){
     const el = document.createElement("article");
-    el.className = "card";
+    const classSuffix = extraClass ? ` ${extraClass}` : "";
+    el.className = `card card--${p.cat || "item"}${classSuffix}`;
     const imgSrc = p.img || "./burger-placeholder.jpg";
 
     el.innerHTML = `
-      <div class="thumb" aria-hidden="true">
-        <img src="${imgSrc}" alt="">
+      <div class="card-head">
+        <h3>${p.name}</h3>
+      </div>
+
+      <div class="thumb-wrap">
+        <div class="thumb">
+          <img src="${imgSrc}" alt="${p.name}">
+        </div>
+        <div class="price">${money(p.price)}</div>
       </div>
 
       <div class="card-body">
-        <div class="card-top">
-          <h3>${p.name}</h3>
-          <div class="price">${money(p.price)}</div>
-        </div>
-
         <div class="desc">${p.desc}</div>
 
         <div class="card-bottom">
@@ -331,18 +440,68 @@ function renderProducts(){
           </div>
 
           <button class="addbtn" type="button" data-add="${p.id}" aria-label="Adicionar ${p.name}">
-            +
+            <span class="addbtn__label">Adicionar</span>
+            <span class="addbtn__plus" aria-hidden="true">+</span>
           </button>
         </div>
       </div>
     `;
     grid.appendChild(el);
+  }
+
+  function appendCategoryTitle(label){
+    const title = document.createElement("div");
+    title.className = "grid-group-title";
+    title.textContent = label;
+    grid.appendChild(title);
+  }
+
+  function appendEmpty(){
+    const empty = document.createElement("p");
+    empty.className = "grid-empty";
+    empty.textContent = "Nenhum item encontrado para este filtro.";
+    grid.appendChild(empty);
+  }
+
+  if(selectedCat === ""){
+    const groups = [
+      { id: "trad", label: "Burguers Tradicionais" },
+      { id: "esp", label: "Burguers Especiais" },
+      { id: "bebidas", label: "Bebidas" },
+    ];
+
+    let rendered = 0;
+    groups.forEach(group => {
+      const items = byQuery.filter(p => p.cat === group.id);
+      if(items.length === 0) return;
+      appendCategoryTitle(group.label);
+      items.forEach((item, idx) => {
+        const isLastOdd = items.length % 2 === 1 && idx === items.length - 1;
+        appendCard(item, isLastOdd ? "card--last-odd" : "");
+      });
+      rendered += items.length;
+    });
+
+    if(rendered === 0) appendEmpty();
+    return;
+  }
+
+  const list = byQuery.filter(p => p.cat === selectedCat);
+  if(list.length === 0){
+    appendEmpty();
+    return;
+  }
+
+  list.forEach((item, idx) => {
+    const isLastOdd = list.length % 2 === 1 && idx === list.length - 1;
+    appendCard(item, isLastOdd ? "card--last-odd" : "");
   });
 }
 
 function syncCatsFromSelect(){
   if(!cat) return;
-  const v = cat.value || "todos";
+  const validCats = new Set(["trad","esp","bebidas"]);
+  const v = validCats.has(cat.value) ? cat.value : "";
   document.querySelectorAll(".cat").forEach(b => {
     b.classList.toggle("active", b.dataset.cat === v);
   });
@@ -355,6 +514,7 @@ function setPageScrollLocked(locked){
 
 function openDrawer(){
   if(!cartDrawer || !drawerOverlay) return;
+  if(cartCount() === 0) return;
   lastFocus = document.activeElement;
 
   cartDrawer.classList.add("open");
@@ -402,11 +562,11 @@ function renderDrawer(){
       const unit = lineUnitPrice(line);
       const customText = summarizeCustomization(line);
       const lineTotal = unit * (Number(line.qty) || 0);
-      const open = !!line.ui?.open;
-
-      const removeList = Array.isArray(p.removeOptions) && p.removeOptions.length
-        ? p.removeOptions
-        : ["Alface","Tomate","Cebola","Picles","Queijo","Molho"];
+      const customizable = canCustomizeProduct(p);
+      const removeList = customizable
+        ? (Array.isArray(p.removeOptions) ? p.removeOptions : [])
+        : [];
+      const extrasSource = customizable ? GLOBAL_EXTRAS : [];
 
       const currentRemove = new Set(line.custom?.remove || []);
       const currentExtras = line.custom?.extras || {};
@@ -422,7 +582,7 @@ function renderDrawer(){
         `;
       }).join("");
 
-      const extrasHtml = GLOBAL_EXTRAS.map(ex => {
+      const extrasHtml = extrasSource.map(ex => {
         const val = Math.max(0, Number(currentExtras[ex.id] || 0));
         return `
           <div class="custom-item custom-step" data-line="${line.uid}">
@@ -439,6 +599,46 @@ function renderDrawer(){
           </div>
         `;
       }).join("");
+
+      const hasCustomization = customizable && (removeHtml.length > 0 || extrasHtml.length > 0);
+      const open = hasCustomization && !!line.ui?.open;
+
+      const optionsButtonHtml = hasCustomization ? `
+          <button class="cart-options-btn" type="button" data-toggle-custom="${line.uid}" aria-expanded="${open ? "true":"false"}">
+            <span>Opções</span>
+            <span class="optchev">›</span>
+          </button>
+      ` : "";
+
+      const removeGroupHtml = removeHtml ? `
+              <div class="inline-custom__group">
+                <div class="inline-custom__label">Remover</div>
+                <div class="custom-list">${removeHtml}</div>
+              </div>
+      ` : "";
+
+      const extrasGroupHtml = extrasHtml ? `
+              <div class="inline-custom__group">
+                <div class="inline-custom__label">Adicionar (extras)</div>
+                <div class="custom-list">${extrasHtml}</div>
+              </div>
+      ` : "";
+
+      const customPanelHtml = hasCustomization ? `
+        <div class="inline-custom" data-custom-panel="${line.uid}" ${open ? "" : "hidden"}>
+          <div class="panel">
+            <div class="panel-head">
+              <strong class="panel-title">Opções do lanche</strong>
+              <button type="button" class="iconbtn" data-close-custom="${line.uid}" aria-label="Fechar opções">✕</button>
+            </div>
+
+            <div class="inline-custom__sections">
+              ${removeGroupHtml}
+              ${extrasGroupHtml}
+            </div>
+          </div>
+        </div>
+      ` : "";
 
       const item = document.createElement("div");
       item.className = "drawer-item";
@@ -472,32 +672,10 @@ function renderDrawer(){
             <strong>${money(lineTotal)}</strong>
           </div>
 
-          <button class="cart-options-btn" type="button" data-toggle-custom="${line.uid}" aria-expanded="${open ? "true":"false"}">
-            <span>Opções</span>
-            <span class="optchev">›</span>
-          </button>
+          ${optionsButtonHtml}
         </div>
 
-        <div class="inline-custom" data-custom-panel="${line.uid}" ${open ? "" : "hidden"}>
-          <div class="panel">
-            <div class="panel-head">
-              <strong class="panel-title">Opções do lanche</strong>
-              <button type="button" class="iconbtn" data-close-custom="${line.uid}" aria-label="Fechar opções">✕</button>
-            </div>
-
-            <div class="inline-custom__sections">
-              <div class="inline-custom__group">
-                <div class="inline-custom__label">Remover</div>
-                <div class="custom-list">${removeHtml}</div>
-              </div>
-
-              <div class="inline-custom__group">
-                <div class="inline-custom__label">Adicionar (extras)</div>
-                <div class="custom-list">${extrasHtml}</div>
-              </div>
-            </div>
-          </div>
-        </div>
+        ${customPanelHtml}
       `;
       drawerItems.appendChild(item);
     });
@@ -517,13 +695,14 @@ function renderDrawer(){
 function addProductToCart(productId){
   const p = getProduct(productId);
   if(!p) return;
+  const canCustomize = canCustomizeProduct(p);
 
   cart.unshift({
     uid: genUid(),
     productId,
     qty: 1,
     custom: { remove: [], extras: {} },
-    ui: { open: true } // abre opções ao adicionar (pode trocar para false)
+    ui: { open: canCustomize } // abre opções ao adicionar (pode trocar para false)
   });
 
   saveState();
@@ -571,6 +750,8 @@ function toggleCustomPanel(uid, open){
 function applyRemoveToggle(uid, name, checked){
   const line = findLine(uid);
   if(!line) return;
+  const p = getProduct(line.productId);
+  if(!canCustomizeProduct(p)) return;
 
   const arr = Array.isArray(line.custom?.remove) ? line.custom.remove : [];
   const set = new Set(arr);
@@ -589,6 +770,8 @@ function applyRemoveToggle(uid, name, checked){
 function setExtraQty(uid, exId, qty){
   const line = findLine(uid);
   if(!line) return;
+  const p = getProduct(line.productId);
+  if(!canCustomizeProduct(p)) return;
 
   line.custom = line.custom || { remove: [], extras: {} };
   line.custom.extras = (line.custom.extras && typeof line.custom.extras === "object") ? line.custom.extras : {};
@@ -675,20 +858,27 @@ function checkoutWhatsApp(){
   const total = sub + f;
 
   const safe = (t) => String(t || "").replace(/\uFFFD/g, "");
+  const note = String(orderNote || "").trim();
+  const orderLines = cartLines().map(safe);
 
   const msg = [
-    "Olá! Quero pedir no Bendito Burguer 🍔",
+    `Olá! Quero pedir no Bendito Burguer: ${BURGER_ICON}`,
     "",
-    `Endereço: ${safe(address.street)} — ${safe(address.district)} (${safe(address.city)})`,
+    `• *Endereço:* ${safe(address.street)} — ${safe(address.district)} (${safe(address.city)})`,
     "",
-    "Pedido:",
-    ...cartLines().map(safe),
+    "• *Pedido:*",
+    ...orderLines,
     "",
-    `Subtotal: ${money(sub)}`,
-    `Taxa: ${money(f)}`,
-    `Total: ${money(total)}`,
-    `Tempo: ${eta}`
-  ].filter(Boolean).join("\n");
+    ...(note ? [`• *Observação:* ${safe(note)}`, ""] : []),
+    `• *Subtotal:* ${money(sub)}`,
+    "",
+    `• *Taxa:* ${money(f)}`,
+    "",
+    `• *Total:* ${money(total)}`,
+    "",
+    `• *Tempo:* ${eta}`,
+    ""
+  ].join("\n");
 
   window.open(wpp(msg), "_blank");
 }
@@ -699,6 +889,32 @@ function checkoutWhatsApp(){
 
 // abrir endereço
 $("openAddress")?.addEventListener("click", openAddrModal);
+
+// CTAs do header (evita redundância entre "Pedir agora" e "Ver cardápio")
+ctaOrderNow?.addEventListener("click", (e)=>{
+  e.preventDefault();
+
+  // Primeiro passo importante do delivery: confirmar endereço
+  if(!address){
+    openAddrModal();
+    setTimeout(() => street?.focus?.(), 0);
+    return;
+  }
+
+  // Se já houver itens, levar direto para finalização
+  if(cartCount() > 0){
+    openDrawer();
+    return;
+  }
+
+  // Sem itens ainda: levar ao cardápio e focar a busca
+  goToMenuAndFocusSearch();
+});
+
+ctaMenu?.addEventListener("click", (e)=>{
+  e.preventDefault();
+  goToMenuAndFocusSearch();
+});
 
 // cancelar endereço
 cancelAddrBtn?.addEventListener("click", (e)=>{
@@ -818,20 +1034,27 @@ drawerItems?.addEventListener("input", (e)=>{
 // checkout
 drawerCheckout?.addEventListener("click", checkoutWhatsApp);
 
+orderNoteInput?.addEventListener("input", ()=>{
+  orderNote = String(orderNoteInput.value || "").slice(0, 280);
+  if(orderNoteInput.value !== orderNote) orderNoteInput.value = orderNote;
+  saveState();
+});
+
 // busca/filtro
 q?.addEventListener("input", renderProducts);
 cat?.addEventListener("change", ()=>{
   syncCatsFromSelect();
   renderProducts();
+  scrollToMenu();
 });
 
 // chips
 document.querySelectorAll(".cat").forEach(btn=>{
   btn.addEventListener("click", ()=>{
-    document.querySelectorAll(".cat").forEach(x=>x.classList.remove("active"));
-    btn.classList.add("active");
-    if(cat) cat.value = btn.dataset.cat || "todos";
+    if(cat) cat.value = btn.dataset.cat || "";
+    syncCatsFromSelect();
     renderProducts();
+    scrollToMenu();
   });
 });
 

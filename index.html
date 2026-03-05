@@ -12,7 +12,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <title>Bendito Burguer — Delivery</title>
-  <meta name="description" content="Peça online no Bendito Burguer. Entrega e retirada.">
+  <meta name="description" content="Peça online no Bendito Burguer. Delivery rápido e sabor artesanal.">
 
   <link rel="icon" href="./logo-bendito.png" type="image/png">
 
@@ -22,7 +22,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@300;400;600&display=swap" rel="stylesheet">
 
   <!-- CSS -->
-  <link rel="stylesheet" href="./styles.css?v=19">
+  <link rel="stylesheet" href="./styles.css?v=53">
 </head>
 
 <body>
@@ -32,27 +32,25 @@
   <div class="dust" aria-hidden="true"></div>
 
   <!-- HEADER/HERO -->
-  <section class="hero-ultimate" aria-label="Header do Bendito Burguer">
+  <section class="hero-ultimate" aria-label="Cabeçalho do Bendito Burguer">
     <div class="wrap hero-ultimate__outer">
       <div class="hero-ultimate__card">
 
         <div class="hero-ultimate__grid">
           <div class="hero-ultimate__left">
-            <div class="hero-ultimate__kicker">BENDITO BURGUER</div>
-
             <h1 class="hero-ultimate__title">
               O BURGUER<br>
               <span>QUE VOCÊ MERECE.</span>
             </h1>
 
             <p class="hero-ultimate__desc">
-              Burgers artesanais, ingredientes selecionados e combinações irresistíveis.
+              Burguers artesanais, ingredientes selecionados e combinações irresistíveis.
               O pedido perfeito para matar a fome.
             </p>
 
             <div class="hero-ultimate__cta">
-              <a class="hero-ultimate__btn" href="#cardapio">Pedir agora</a>
-              <a class="hero-ultimate__btn ghost" href="#cardapio">Ver cardápio</a>
+              <a class="hero-ultimate__btn" id="ctaOrderNow" href="#cardapio">Pedir agora</a>
+              <a class="hero-ultimate__btn ghost" id="ctaMenu" href="#cardapio">Ver cardápio</a>
             </div>
 
             <div class="hero-ultimate__seals" aria-label="Destaques do Bendito Burguer">
@@ -75,14 +73,10 @@
             <span id="statusText">—</span>
           </div>
 
-          <div class="hero-ultimate__toggle" aria-label="Modo do pedido">
-            <span class="pill active" aria-current="true">Entrega</span>
-          </div>
-
-          <button class="hero-ultimate__address" id="openAddress" type="button" aria-label="Informar endereço">
+          <button class="hero-ultimate__address" id="openAddress" type="button" aria-label="Informar ou editar endereço de entrega">
             <div class="hero-ultimate__addrtext">
-              <div id="addrLine">Entregar em: selecione</div>
-              <small id="addrMeta">Taxa e tempo aparecem depois</small>
+              <div id="addrLine">Informar endereço de entrega:</div>
+              <small id="addrMeta">Taxa e tempo aparecem após o endereço</small>
             </div>
             <span class="chev" aria-hidden="true">›</span>
           </button>
@@ -108,16 +102,17 @@
 
         <label for="cat" class="sr-only">Filtrar por categoria</label>
         <select class="select" id="cat" name="cat" aria-label="Filtrar por categoria">
-          <option value="todos">Categorias</option>
-          <option value="trad">Burgers Tradicionais</option>
-          <option value="esp">Burgers Especiais</option>
+          <option value="" selected disabled>Categorias:</option>
+          <option value="trad">Burguers Tradicionais</option>
+          <option value="esp">Burguers Especiais</option>
+          <option value="bebidas">Bebidas</option>
         </select>
       </div>
 
       <nav class="cats" aria-label="Categorias">
-        <button class="cat active" data-cat="todos" type="button">Todos</button>
-        <button class="cat" data-cat="trad" type="button">Tradicionais</button>
-        <button class="cat" data-cat="esp" type="button">Especiais</button>
+        <button class="cat" data-cat="trad" type="button">Burguers Tradicionais</button>
+        <button class="cat" data-cat="esp" type="button">Burguers Especiais</button>
+        <button class="cat" data-cat="bebidas" type="button">Bebidas</button>
       </nav>
     </section>
 
@@ -171,6 +166,10 @@
       <div id="drawerItems" class="drawer-items" aria-live="polite"></div>
 
       <div class="drawer-footer">
+        <div class="drawer-note">
+          <label for="orderNote">Observação do pedido</label>
+          <textarea id="orderNote" rows="3" maxlength="280" placeholder="Ex.: sem guardanapo, ponto da carne, molho separado..."></textarea>
+        </div>
         <div class="drawer-footer__line">
           <small>Subtotal</small>
           <span id="drawerSubtotal">R$ 0,00</span>
@@ -192,7 +191,7 @@
   <dialog id="addrModal" aria-label="Endereço de entrega">
     <form class="modal" id="addrForm" method="dialog">
       <h4>Informe seu endereço</h4>
-      <p>Entregas apenas para <b>Cerquilho - SP</b> (taxa R$ 6,00).</p>
+      <p>Entregas apenas para a cidade de <b>Cerquilho - SP</b> (taxa R$ 6,00).</p>
 
       <div class="field">
         <label for="street">Rua / Número</label>
@@ -210,9 +209,7 @@
       </div>
 
       <div class="modalrow">
-<button class="cart-options-btn" type="button">
-  Opções <span>›</span>
-</button>
+        <button class="btn ghost" id="cancelAddr" type="button">Cancelar</button>
         <button class="btn" id="saveAddr" type="submit">Salvar</button>
       </div>
     </form>
@@ -243,6 +240,6 @@
     </form>
   </dialog>
 
-<script src="./script.js?v=12" defer></script>
+<script src="./script.js?v=33" defer></script>
 </body>
 </html>
