@@ -422,27 +422,29 @@ function renderProducts(){
     el.innerHTML = `
       <div class="card-head">
         <h3>${p.name}</h3>
-      </div>
-
-      <div class="thumb-wrap">
-        <div class="thumb">
-          <img src="${imgSrc}" alt="${p.name}">
-        </div>
         <div class="price">${money(p.price)}</div>
       </div>
 
-      <div class="card-body">
-        <div class="desc">${p.desc}</div>
-
-        <div class="card-bottom">
-          <div class="tags">
-            ${(p.tags || []).map(t => `<span class="tag">${t}</span>`).join("")}
+      <div class="card-content">
+        <div class="thumb-wrap">
+          <div class="thumb">
+            <img src="${imgSrc}" alt="${p.name}">
           </div>
+        </div>
 
-          <button class="addbtn" type="button" data-add="${p.id}" aria-label="Adicionar ${p.name}">
-            <span class="addbtn__label">Adicionar</span>
-            <span class="addbtn__plus" aria-hidden="true">+</span>
-          </button>
+        <div class="card-body">
+          <div class="desc">${p.desc}</div>
+
+          <div class="card-bottom">
+            <div class="tags">
+              ${(p.tags || []).map(t => `<span class="tag">${t}</span>`).join("")}
+            </div>
+
+            <button class="addbtn" type="button" data-add="${p.id}" aria-label="Adicionar ${p.name}">
+              <span class="addbtn__label">Adicionar</span>
+              <span class="addbtn__plus" aria-hidden="true">+</span>
+            </button>
+          </div>
         </div>
       </div>
     `;
